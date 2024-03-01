@@ -1,7 +1,7 @@
 from sys import argv
 from src.editor import Editor
 from src.logger import FileLogger
-from src.tui import TextUserInterface
+from src.tui.tui import TextUserInterface
 import traceback
 
 
