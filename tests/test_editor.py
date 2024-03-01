@@ -181,3 +181,10 @@ def test_move_cursor_down_remembering_position():
     editor.cursor_down()
     editor.cursor_down()
     assert editor.cursor["line"] == 2 and editor.cursor["char"] == 3
+
+
+def test_cursor_down_on_last_line():
+    """When moving the cursor down in the last line it should nothing happen"""
+    editor = Editor(text=[""], cursor=Cursor(line=0, char=0))
+    editor.cursor_down()
+    assert editor.cursor["line"] == 0 and editor.cursor["char"] == 0

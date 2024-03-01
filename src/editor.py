@@ -63,7 +63,7 @@ class Editor:
         except PermissionError:
             print(f"Error: Permission denied to access file '{path}'.")
         except Exception as e:
-            print(f"Error: An unexpected error occurred: {e}")
+            raise e
 
     def save(self):
         try:
@@ -74,7 +74,7 @@ class Editor:
         except PermissionError:
             print(f"Error: Permission denied to access file '{self.__file_path}'.")
         except Exception as e:
-            print(f"Error: An unexpected error occurred: {e}")
+            raise e
 
     def exit(self):
         os.remove(self.__file_path + ".tmp")
@@ -124,11 +124,11 @@ class Editor:
 
     def cursor_up(self):
         is_first_line = self.cursor["line"] == 0
-        is_next_line_longer_than_last_ref = (
-            len(self.__get_line_text_at(self.cursor["line"] - 1))
-            >= self.cursor["last_horizontal_ref"]
-        )
         if not is_first_line:
+            is_next_line_longer_than_last_ref = (
+                len(self.__get_line_text_at(self.cursor["line"] - 1))
+                >= self.cursor["last_horizontal_ref"]
+            )
             if is_next_line_longer_than_last_ref:
                 self.__move_cursor(
                     self.cursor["line"] - 1, self.cursor["last_horizontal_ref"], False
@@ -142,12 +142,12 @@ class Editor:
 
     def cursor_down(self):
         is_not_last_line = self.cursor["line"] < len(self.text) - 1
-        is_next_line_longest_than_last_ref = (
-            len(self.__get_line_text_at(self.cursor["line"] + 1))
-            >= self.cursor["last_horizontal_ref"]
-        )
 
         if is_not_last_line:
+            is_next_line_longest_than_last_ref = (
+                len(self.__get_line_text_at(self.cursor["line"] + 1))
+                >= self.cursor["last_horizontal_ref"]
+            )
             if is_next_line_longest_than_last_ref:
                 self.__move_cursor(
                     self.cursor["line"] + 1, self.cursor["last_horizontal_ref"], False

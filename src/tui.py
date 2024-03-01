@@ -1,22 +1,37 @@
 from src.editor import Editor
 from typing import Any
+from src.logger import FileLogger
 from src.text_interface import TextInterface
 import curses
 import re
+import os
 
 KEY_ENTER = 10
 KEY_ESC = 27
 KEY_SAVE = 186
+COLOR_AQUAMARINE = 300
+"""Command mode cuando se presione ESC, salir de el cuando se presione a
+Last combination of characters se resetea cuando se haga alguna accion o sino
+cuando pase 1 segundo sin haber escrito nada"""
 
 
 class TextUserInterface(TextInterface):
     __window: Any
     __editor: Editor
+    __command_mode: bool
+    __logger: FileLogger
 
-    def __init__(self, editor: Editor):
+    def __init__(self, editor: Editor, logger: FileLogger, command_mode: bool = False):
+        os.environ.setdefault("ESCDELAY", "25")
         self.__window = curses.initscr()
-        self.__window.keypad(True)
         self.__editor = editor
+        self.__command_mode = command_mode
+        self.__logger = logger
+        self.__window.keypad(True)
+        curses.start_color()
+        curses.use_default_colors()
+        for i in range(0, curses.COLORS):
+            curses.init_pair(i + 1, i, -1)
         self.__update()
 
     @property
@@ -27,9 +42,37 @@ class TextUserInterface(TextInterface):
     def editor(self):
         return self.__editor
 
+    @property
+    def command_mode(self):
+        return self.__command_mode
+
     def handle_input(self):
+        key = self.__get_input()
+        if self.command_mode:
+            self.__command_mode_input(key)
+        else:
+            self.__regular_mode_input(key)
+
+        if self.command_mode:
+            self.__update(color=COLOR_AQUAMARINE)
+        else:
+            self.__update()
+
+    def __command_mode_input(self, key):
         try:
-            key = self.__get_input()
+            if key == KEY_ESC:
+                raise StopIteration
+            if key == ord("a"):
+                self.__command_mode = False
+            return 1
+        except Exception as e:
+            self.__exit()
+            raise e
+
+    def __regular_mode_input(self, key):
+        try:
+            if key == KEY_ESC:
+                self.__command_mode = True
             if key == curses.KEY_LEFT:
                 self.editor.cursor_left()
             elif key == curses.KEY_RIGHT:
@@ -42,19 +85,15 @@ class TextUserInterface(TextInterface):
                 self.editor.delete()
             elif key == KEY_ENTER:
                 self.editor.add_line()
-            elif key == KEY_ESC:
-                raise StopIteration
             elif self.__is_printable(character := chr(key)):
                 self.editor.append(character)
-            self.__update()
-            return 1
         except Exception as e:
             self.__exit()
             raise e
 
-    def __update(self):
+    def __update(self, color=0):
         self.window.clear()
-        self.window.addstr("\n".join(self.editor.text))
+        self.window.addstr("\n".join(self.editor.text), curses.color_pair(color))
         self.window.move(self.editor.cursor["line"], self.editor.cursor["char"])
         self.window.refresh()
 

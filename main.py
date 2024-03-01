@@ -1,5 +1,6 @@
 from sys import argv
 from src.editor import Editor
+from src.logger import FileLogger
 from src.tui import TextUserInterface
 import traceback
 
@@ -8,8 +9,9 @@ def main():
     if len(argv) == 1:
         raise Exception("You must specify a file")
     file_path = argv[1]
+    logger = FileLogger()
     editor = Editor().from_file(file_path)
-    interface = TextUserInterface(editor=editor)
+    interface = TextUserInterface(editor=editor, logger=logger)
     while True:
         try:
             interface.handle_input()
