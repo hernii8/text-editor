@@ -120,8 +120,6 @@ def test_append_newline_from_middle():
     assert editor.text[0] == "a"
     assert editor.text[1] == "aa"
 
-    pass
-
 
 def test_delete_line():
     """When deleting the last character of a line, it should delete the line and move the cursor to the last
@@ -188,3 +186,19 @@ def test_cursor_down_on_last_line():
     editor = Editor(text=[""], cursor=Cursor(line=0, char=0))
     editor.cursor_down()
     assert editor.cursor["line"] == 0 and editor.cursor["char"] == 0
+
+
+# test cut first line
+def test_cut_text():
+    """When cutting text it should remove the entire line and store it"""
+    editor = Editor(text=["abc", "def"], cursor=Cursor(line=1, char=0))
+    editor.cut()
+    assert editor.copied == "def"
+
+
+def test_paste_text():
+    """It should paste the stored text in the current cursor position"""
+    editor = Editor(text=["abc", "def"], cursor=Cursor(line=1, char=0))
+    editor.cut()
+    editor.paste()
+    assert editor.text[0] == "abcdef"

@@ -18,6 +18,7 @@ class Editor:
     __cursor: Cursor
     __max_line_length: int
     __file_path: str
+    __copied: str | None
 
     def __init__(
         self,
@@ -52,6 +53,10 @@ class Editor:
     def file_path(self) -> str:
         return self.__file_path
 
+    @property
+    def copied(self) -> str:
+        return self.__copied
+
     def from_file(self, path: str) -> Editor:
         self.__file_path = path
         try:
@@ -79,15 +84,23 @@ class Editor:
         except Exception as e:
             raise e
 
-    def exit(self):
-        os.remove(self.__file_path + ".tmp")
+    def cut(self):
+        self.__copied = self.__get_current_line_text()
+        self.__remove_line()
 
-    def append(self, character):
+    def paste(self):
+        self.append(self.copied)
+
+    def exit(self):
+        if self.__file_path:
+            os.remove(self.__file_path + ".tmp")
+
+    def append(self, characters):
         if len(self.__get_current_line_text()) >= self.max_line_length:
             self.add_line()
         self.__set_current_line_text(
             self.__get_current_line_text()[0 : self.cursor["char"]]
-            + character
+            + characters
             + self.__get_current_line_text()[self.cursor["char"] :]
         )
         self.cursor_right()
