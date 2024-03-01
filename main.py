@@ -1,9 +1,12 @@
 from sys import argv
 from src.editor import Editor
 from src.tui import TextUserInterface
+import traceback
 
 
 def main():
+    if len(argv) == 1:
+        raise Exception("You must specify a file")
     file_path = argv[1]
     editor = Editor().from_file(file_path)
     interface = TextUserInterface(editor=editor)
@@ -23,5 +26,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        print(e)
+    except Exception:
+        print(traceback.format_exc())
