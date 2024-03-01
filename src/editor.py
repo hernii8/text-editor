@@ -33,6 +33,9 @@ class Editor:
         self.__max_line_length = max_line_length
         self.__file_path = file_path
 
+    def __del__(self):
+        self.exit()
+
     @property
     def text(self) -> List[str]:
         return self.__text

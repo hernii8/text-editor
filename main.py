@@ -17,11 +17,9 @@ def main():
             interface.handle_input()
         except StopIteration:
             editor.save()
-            editor.exit()
             break
         except Exception as e:
             editor.save()
-            editor.exit()
             raise e
 
 

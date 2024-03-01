@@ -64,7 +64,8 @@ class TextUserInterface(TextInterface):
                 raise StopIteration
             if key == ord("a"):
                 self.__command_mode = False
-            return 1
+            if key == ord("s"):
+                self.editor.save()
         except Exception as e:
             self.__exit()
             raise e
