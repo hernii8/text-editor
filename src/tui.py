@@ -62,10 +62,22 @@ class TextUserInterface(TextInterface):
         try:
             if key == KEY_ESC:
                 raise StopIteration
+            if key == curses.KEY_LEFT:
+                self.editor.cursor_left()
+            elif key == curses.KEY_RIGHT:
+                self.editor.cursor_right()
+            elif key == curses.KEY_UP:
+                self.editor.cursor_up()
+            elif key == curses.KEY_DOWN:
+                self.editor.cursor_down()
             if key == ord("a"):
                 self.__command_mode = False
             if key == ord("s"):
                 self.editor.save()
+            if key == ord("x"):
+                self.editor.cut()
+            if key == ord("p"):
+                self.editor.paste()
         except Exception as e:
             self.__exit()
             raise e
