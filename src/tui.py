@@ -1,7 +1,7 @@
-from editor import Editor
+from src.editor import Editor
 from typing import Any
-from text_interface import TextInterface
-from curses import KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_BACKSPACE, KEY_UP, initscr
+from src.text_interface import TextInterface
+import curses
 
 import re
 
@@ -14,9 +14,10 @@ class TextUserInterface(TextInterface):
     __editor: Editor
 
     def __init__(self, editor: Editor):
-        self.__window = initscr()
+        self.__window = curses.initscr()
         self.__window.keypad(True)
         self.__editor = editor
+        self.__update()
 
     @property
     def window(self):
@@ -27,37 +28,44 @@ class TextUserInterface(TextInterface):
         return self.__editor
 
     def handle_input(self):
-        key = self.get_input()
+        key = self.__get_input()
         if key == 0xB0:
             self.editor.save()
-        if key == KEY_LEFT:
+        if key == curses.KEY_LEFT:
             self.editor.cursor_left()
-        elif key == KEY_RIGHT:
+        elif key == curses.KEY_RIGHT:
             self.editor.cursor_right()
-        elif key == KEY_UP:
+        elif key == curses.KEY_UP:
             self.editor.cursor_up()
-        elif key == KEY_DOWN:
+        elif key == curses.KEY_DOWN:
             self.editor.cursor_down()
-        elif key == KEY_BACKSPACE:
+        elif key == curses.KEY_BACKSPACE:
             self.editor.delete()
         elif key == KEY_ENTER:
             self.editor.add_line()
         elif key == KEY_ESC:
+            self.__exit()
             return 0
         elif self.__is_printable(character := chr(key)):
             self.editor.append(character)
-        self.update()
+        self.__update()
         return 1
 
-    def update(self):
+    def __update(self):
         self.window.clear()
         self.window.addstr("\n".join(self.editor.text))
         self.window.move(self.editor.cursor["line"], self.editor.cursor["char"])
         self.window.refresh()
 
-    def get_input(self):
+    def __get_input(self):
         return self.window.getch()
 
     def __is_printable(self, char):
         printable_characters = r"[^\x00-\x1F\x7F-\x9F]+"
         return re.match(printable_characters, char) is not None
+
+    def __exit(self):
+        curses.nocbreak()
+        self.window.keypad(False)
+        curses.echo()
+        curses.endwin()
