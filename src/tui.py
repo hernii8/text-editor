@@ -2,11 +2,11 @@ from src.editor import Editor
 from typing import Any
 from src.text_interface import TextInterface
 import curses
-
 import re
 
 KEY_ENTER = 10
 KEY_ESC = 27
+KEY_SAVE = 186
 
 
 class TextUserInterface(TextInterface):
@@ -28,28 +28,29 @@ class TextUserInterface(TextInterface):
         return self.__editor
 
     def handle_input(self):
-        key = self.__get_input()
-        if key == 0xB0:
-            self.editor.save()
-        if key == curses.KEY_LEFT:
-            self.editor.cursor_left()
-        elif key == curses.KEY_RIGHT:
-            self.editor.cursor_right()
-        elif key == curses.KEY_UP:
-            self.editor.cursor_up()
-        elif key == curses.KEY_DOWN:
-            self.editor.cursor_down()
-        elif key == curses.KEY_BACKSPACE:
-            self.editor.delete()
-        elif key == KEY_ENTER:
-            self.editor.add_line()
-        elif key == KEY_ESC:
+        try:
+            key = self.__get_input()
+            if key == curses.KEY_LEFT:
+                self.editor.cursor_left()
+            elif key == curses.KEY_RIGHT:
+                self.editor.cursor_right()
+            elif key == curses.KEY_UP:
+                self.editor.cursor_up()
+            elif key == curses.KEY_DOWN:
+                self.editor.cursor_down()
+            elif key == curses.KEY_BACKSPACE:
+                self.editor.delete()
+            elif key == KEY_ENTER:
+                self.editor.add_line()
+            elif key == KEY_ESC:
+                raise StopIteration
+            elif self.__is_printable(character := chr(key)):
+                self.editor.append(character)
+            self.__update()
+            return 1
+        except Exception as e:
             self.__exit()
-            return 0
-        elif self.__is_printable(character := chr(key)):
-            self.editor.append(character)
-        self.__update()
-        return 1
+            raise e
 
     def __update(self):
         self.window.clear()

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from typing import List, TypedDict
 from dataclasses import dataclass
 
@@ -49,12 +50,16 @@ class Editor:
         return self.__file_path
 
     def from_file(self, path: str) -> Editor:
+        self.__file_path = path
         try:
-            with open(path) as file:
-                self.__file_path = path
-                return Editor(text=file.read().split("\n"))
+            with open(path + ".tmp", "x+") as file:
+                self.__text = file.read().split("\n")
+                return self
         except FileNotFoundError:
-            print(f"Error: File '{path}' not found.")
+            open(path, "x")
+            with open(path + ".tmp", "x+") as file:
+                self.__text = file.read().split("\n")
+                return self
         except PermissionError:
             print(f"Error: Permission denied to access file '{path}'.")
         except Exception as e:
@@ -62,7 +67,7 @@ class Editor:
 
     def save(self):
         try:
-            with open("prueba.py", "w") as file:
+            with open(self.__file_path, "w") as file:
                 file.write("\n".join(self.text))
         except FileNotFoundError:
             print(f"Error: File '{self.__file_path}' not found.")
@@ -70,6 +75,9 @@ class Editor:
             print(f"Error: Permission denied to access file '{self.__file_path}'.")
         except Exception as e:
             print(f"Error: An unexpected error occurred: {e}")
+
+    def exit(self):
+        os.remove(self.__file_path + ".tmp")
 
     def print(self):
         print("\n".join(self.text))
