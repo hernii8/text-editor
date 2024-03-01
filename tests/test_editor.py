@@ -188,7 +188,6 @@ def test_cursor_down_on_last_line():
     assert editor.cursor["line"] == 0 and editor.cursor["char"] == 0
 
 
-# test cut first line
 def test_cut_text():
     """When cutting text it should remove the entire line and store it"""
     editor = Editor(text=["abc", "def"], cursor=Cursor(line=1, char=0))
@@ -202,3 +201,8 @@ def test_paste_text():
     editor.cut()
     editor.paste()
     assert editor.text[0] == "abcdef"
+
+
+# test cut first line
+# test break word on appending
+# test break word on deleting

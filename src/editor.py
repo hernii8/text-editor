@@ -60,8 +60,10 @@ class Editor:
     def from_file(self, path: str) -> Editor:
         self.__file_path = path
         try:
-            with open(path + ".tmp", "x+") as file:
+            tmp_file = path + ".tmp"
+            with open(path, "r") as file:
                 self.__text = file.read().split("\n")
+            with open(tmp_file, "x+") as file:
                 return self
         except FileNotFoundError:
             open(path, "x")
