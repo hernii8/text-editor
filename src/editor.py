@@ -75,20 +75,20 @@ class Editor:
         print("\n".join(self.text))
 
     def append(self, character):
-        if len(self.text[self.cursor["line"]]) >= self.max_line_length:
+        if len(self.__get_current_line_text()) >= self.max_line_length:
             self.add_line()
-        self.text[self.cursor["line"]] = (
-            self.text[self.cursor["line"]][0 : self.cursor["char"]]
+        self.__set_current_line_text(
+            self.__get_current_line_text()[0 : self.cursor["char"]]
             + character
-            + self.text[self.cursor["line"]][self.cursor["char"] :]
+            + self.__get_current_line_text()[self.cursor["char"] :]
         )
         self.cursor_right()
 
     def delete(self):
-        if len(self.text[self.cursor["line"]]) > 0:
-            self.text[self.cursor["line"]] = (
-                self.text[self.cursor["line"]][0 : self.cursor["char"] - 1]
-                + self.text[self.cursor["line"]][self.cursor["char"] :]
+        if len(self.__get_current_line_text()) > 0:
+            self.__set_current_line_text(
+                self.__get_current_line_text()[0 : self.cursor["char"] - 1]
+                + self.__get_current_line_text()[self.cursor["char"] :]
             )
             self.cursor_left()
         else:
@@ -96,17 +96,19 @@ class Editor:
                 self.__remove_line()
 
     def cursor_right(self):
-        if self.cursor["char"] >= len(self.text[self.cursor["line"]]):
-            if self.cursor["line"] < len(self.text) - 1:
+        is_cursor_at_end = self.cursor["char"] >= len(self.__get_current_line_text())
+        are_more_lines = self.cursor["line"] < len(self.text) - 1
+        if is_cursor_at_end:
+            if are_more_lines:
                 self.__move_cursor(self.cursor["line"] + 1, 0, True)
         else:
             self.__move_cursor(self.cursor["line"], self.cursor["char"] + 1, True)
 
-        self.cursor["last_horizontal_ref"] = self.cursor["char"]
-
     def cursor_left(self):
-        if self.cursor["char"] <= 0:
-            if self.cursor["line"] > 0:
+        is_cursor_at_beggining = self.cursor["char"] <= 0
+        is_first_line = self.cursor["line"] == 0
+        if is_cursor_at_beggining:
+            if not is_first_line:
                 self.__move_cursor(
                     self.cursor["line"] - 1,
                     len(self.text[self.cursor["line"] - 1]),
@@ -116,52 +118,58 @@ class Editor:
             self.__move_cursor(self.cursor["line"], self.cursor["char"] - 1, True)
 
     def cursor_up(self):
-        if self.cursor["line"] > 0:
-            if (
-                len(self.text[self.cursor["line"] - 1])
-                >= self.cursor["last_horizontal_ref"]
-            ):
+        is_first_line = self.cursor["line"] == 0
+        is_next_line_longer_than_last_ref = (
+            len(self.__get_line_text_at(self.cursor["line"] - 1))
+            >= self.cursor["last_horizontal_ref"]
+        )
+        if not is_first_line:
+            if is_next_line_longer_than_last_ref:
                 self.__move_cursor(
                     self.cursor["line"] - 1, self.cursor["last_horizontal_ref"], False
                 )
             else:
                 self.__move_cursor(
                     self.cursor["line"] - 1,
-                    len(self.text[self.cursor["line"] - 1]),
+                    len(self.__get_line_text_at(self.cursor["line"] - 1)),
                     False,
                 )
 
     def cursor_down(self):
-        if self.cursor["line"] < len(self.text) - 1:
-            if (
-                len(self.text[self.cursor["line"] + 1])
-                >= self.cursor["last_horizontal_ref"]
-            ):
+        is_not_last_line = self.cursor["line"] < len(self.text) - 1
+        is_next_line_longest_than_last_ref = (
+            len(self.__get_line_text_at(self.cursor["line"] + 1))
+            >= self.cursor["last_horizontal_ref"]
+        )
+
+        if is_not_last_line:
+            if is_next_line_longest_than_last_ref:
                 self.__move_cursor(
                     self.cursor["line"] + 1, self.cursor["last_horizontal_ref"], False
                 )
             else:
                 self.__move_cursor(
                     self.cursor["line"] + 1,
-                    len(self.text[self.cursor["line"] + 1]),
+                    len(self.__get_line_text_at(self.cursor["line"] + 1)),
                     False,
                 )
+
+    def add_line(self):
+        lines_before = self.text[0 : self.cursor["line"] + 1]
+        lines_after = self.text[self.cursor["line"] + 1 :]
+        characters_after_cursor = self.text[self.cursor["line"]][self.cursor["char"] :]
+        if len(characters_after_cursor) > 0:
+            characters_before_cursor = lines_before[-1][: -len(characters_after_cursor)]
+            lines_before[-1] = characters_before_cursor
+        new_line = [characters_after_cursor]
+        self.__text = lines_before + new_line + lines_after
+        self.__move_cursor(self.cursor["line"] + 1, 0, True)
 
     def __move_cursor(self, line: int, char: int, update_ref=False):
         self.cursor["line"] = line
         self.cursor["char"] = char
         if update_ref:
             self.cursor["last_horizontal_ref"] = char
-
-    def add_line(self):
-        lines_before = self.text[0 : self.cursor["line"] + 1]
-        lines_after = self.text[self.cursor["line"] + 1 :]
-        characters_after = self.text[self.cursor["line"]][self.cursor["char"] :]
-        if len(characters_after) > 0:
-            lines_before[-1] = lines_before[-1][: -len(characters_after)]
-        new_line = [characters_after]
-        self.__text = lines_before + new_line + lines_after
-        self.__move_cursor(self.cursor["line"] + 1, 0, True)
 
     def __remove_line(self):
         lines_before = self.text[0 : self.cursor["line"]]
@@ -172,3 +180,12 @@ class Editor:
         self.__move_cursor(
             previous_line_index, len(self.text[previous_line_index]), True
         )
+
+    def __get_current_line_text(self):
+        return self.__get_line_text_at(self.cursor["line"])
+
+    def __get_line_text_at(self, i: int):
+        return self.text[i]
+
+    def __set_current_line_text(self, text: str):
+        self.text[self.cursor["line"]] = text
