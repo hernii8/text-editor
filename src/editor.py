@@ -79,9 +79,6 @@ class Editor:
     def exit(self):
         os.remove(self.__file_path + ".tmp")
 
-    def print(self):
-        print("\n".join(self.text))
-
     def append(self, character):
         if len(self.__get_current_line_text()) >= self.max_line_length:
             self.add_line()
