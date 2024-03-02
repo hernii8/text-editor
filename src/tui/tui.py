@@ -11,7 +11,7 @@ COLOR_AQUAMARINE = 300
 
 
 class TextUserInterface(TextInterface):
-    def __init__(self, editor: Editor, logger: FileLogger, command_mode: bool = False):
+    def __init__(self, editor: Editor, logger: FileLogger):
         self.__editor = editor
         self.__logger = logger
         self.__active_mode: Mode = TextUserInterfaceTypingMode(editor=editor)
@@ -26,24 +26,16 @@ class TextUserInterface(TextInterface):
     def editor(self):
         return self.__editor
 
-    @property
-    def active_mode(self):
-        return self.__active_mode
-
-    @active_mode.setter
-    def active_mode(self, value):
-        self.__active_mode = value
-
     def handle_input(self):
         try:
             key = self.window.getch()
-            self.active_mode.key_action(key)
-            if not self.active_mode.is_active:
+            self.__active_mode.key_action(key)
+            if not self.__active_mode.is_active:
                 self.switch_modes()
 
             self.__update(
                 color=COLOR_AQUAMARINE
-                if isinstance(self.active_mode, TextUserInterfaceCommandMode)
+                if isinstance(self.__active_mode, TextUserInterfaceCommandMode)
                 else 0
             )
         except Exception as e:
@@ -72,8 +64,8 @@ class TextUserInterface(TextInterface):
         curses.endwin()
 
     def switch_modes(self):
-        self.active_mode = (
+        self.__active_mode = (
             TextUserInterfaceTypingMode(editor=self.__editor)
-            if isinstance(self.active_mode, TextUserInterfaceCommandMode)
+            if isinstance(self.__active_mode, TextUserInterfaceCommandMode)
             else TextUserInterfaceCommandMode(editor=self.__editor)
         )
